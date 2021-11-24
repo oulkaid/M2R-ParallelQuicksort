@@ -43,35 +43,101 @@ library(reshape2)
 version
 ```
 
-## 3. Build the Dataframe from file
+## 3. Experimentation and analysis
+Now, let's build the dataframes from csv files and plot the corresponding graphs with ggplot2.
+
+Each experiment is run on a different machine. The goal is to explore the effect of system capabilities on the overall performance (and maybe make conclusions upon the patterns found).
+
+### 3.1. Machine 1 (Virtual Machine): 4 cores, 1 thread per core, 2370 CPU MHz
 ```{r, message=FALSE}
 #parameters: START_SIZE=0, MAX_SIZE=15000000, STEP=1000000
 df <- read.csv("data/in_2021-11-20/measurements_01:44.csv",header=T)
 df <- melt(df, id.vars="Size")
 names(df)[2] <- "Type"
 names(df)[3] <- "Time"
-```
 
-## 4. Plotting
-
-```{r, message=FALSE}
 ggplot(df, aes(Size, Time, colour=Type)) + 
   geom_point(size = 0.2) +
   stat_smooth(size = 0.7) +
   theme( plot.title = element_text(hjust = 0.5), legend.position = "top" ) +
-  scale_x_continuous(breaks=c(8000000, 11000000))
-
+  scale_x_continuous(breaks=c(0, 8000000, 11000000, 15000000))
 ```
 
 **Comment:** For arrays with a size of up to 11000000 elements, the built-in method is the most rapid. Afterwards, the Threaded computing performs better. 
 Also, for small array sizes (less than 8000000) the use of Parallel computing only slows down the speed, and we see that the Sequential sorting provides quicker results.
 
-**Note:** This experiment was done on a virtual machine (4 cores assigned, 8 GB of RAM), and there was no other application running when the expirement was running.
+**Note:** This experiment was done on a virtual machine (4 cores assigned, 8 GB of RAM), and there was no other application running when the experiment was running.
 
-**TODO: ** Use other machines to explore the effect of system capabilities on the overall performance (and maybe make conclusions upon the patterns found).
+### 3.2. Machine 2 (Physical Machine): 4 cores, 2 threads per core, 1346 CPU MHz
+```{r, message=FALSE}
+#parameters: START_SIZE=0, MAX_SIZE=1000000, STEP=100000
+df2 <- read.csv("data/oulkaido_2021-11-24/measurements_21:26.csv",header=T)
+df2 <- melt(df2, id.vars="Size")
+names(df2)[2] <- "Type"
+names(df2)[3] <- "Time"
+
+ggplot(df2, aes(Size, Time, colour=Type)) + 
+  geom_point(size = 0.2) +
+  stat_smooth(size = 0.7) +
+  theme( plot.title = element_text(hjust = 0.5), legend.position = "top" ) +
+  scale_x_continuous(breaks=c(0, 600000, 1000000))
+```
+
+### 3.3. Machine 1 (Physical Machine): 6 cores, 1 thread per core, 3000 CPU MHz
+```{r, message=FALSE}
+#parameters: START_SIZE=0, MAX_SIZE=600000, STEP=10000
+df3 <- read.csv("data/ensipc103_2021-11-24/measurements_22:03.csv",header=T)
+df3 <- melt(df3, id.vars="Size")
+names(df3)[2] <- "Type"
+names(df3)[3] <- "Time"
+
+ggplot(df3, aes(Size, Time, colour=Type)) + 
+  geom_point(size = 0.1) +
+  stat_smooth(size = 0.7) +
+  theme( plot.title = element_text(hjust = 0.5), legend.position = "top" ) +
+  scale_x_continuous(breaks=c(0, 360000, 460000, 600000))
+```
+
+### 3.4. Comparison according to Parallel time
+Summary of CPU specification:
+```{r table2, echo=FALSE, message=FALSE, warnings=FALSE}
+tabl <- "
+| Machine       | Cores  | Thread/core  | CPU MHz |
+|---------------|--------|--------------|---------|
+| 1 (Virtual)   | 4      | 1            | 2370    |
+| 2 (Physical)  | 4      | 2            | 1346    |
+| 3 (Physcial)  | 6      | 1            | 3000    |
+"
+cat(tabl) # output the table in a format good for HTML/PDF/docx conversion
+```
 
 
+Plot: **TBD**
 
+Comparison: **TBD**
+<!--
+```{r, message=FALSE}
+#extracting only Parallel sorting columns
+df_bis  <- subset(df, Type=="Par")
+df_bis2 <- subset(df2, Type=="Par")
+df_bis3 <- subset(df3, Type=="Par")
+
+#appending IDs specifying the machine
+df_bis[,"Machine"]  = 1
+df_bis2[,"Machine"] = 2
+df_bis3[,"Machine"] = 3
+
+#group all data in one dataframe
+df_all_par <- rbind(df_bis, df_bis2, df_bis3)
+df_all_par <- transform(df_all_par, Machine = as.character(Machine))
+
+#plot
+ggplot(df_all_par, aes(Size, Time, colour=Machine)) + 
+  geom_point(size = 0.1) +
+  stat_smooth(size = 0.7) +
+  theme( plot.title = element_text(hjust = 0.5), legend.position = "top" )
+```
+-->
 
 
 
