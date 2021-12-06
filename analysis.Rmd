@@ -1,6 +1,6 @@
 ---
 title: "Benchmarking Analysis for a Multi-Threaded Version of Quicksort"
-author: "Authors: Oussama Oulkaid, ##, ##"  
+author: "Authors: Oussama Oulkaid, Dalia Hareb, Walid Alihaimoud"  
 date: "November, 2021"
 geometry: margin=1.5cm
 output:
@@ -67,6 +67,8 @@ ggplot(df, aes(Size, Time, colour=Type)) +
 **Comment:** For arrays with a size of up to 11000000 elements, the built-in method is the most rapid. Afterwards, the Threaded computing performs better. 
 Also, for small array sizes (less than 8000000) the use of Parallel computing only slows down the speed, and we see that the Sequential sorting provides quicker results.
 
+One clear reason why the parallel method was slow with smaller array size refer to the fact that the joining process of the thread sides take a considerable amount of time compared to the whole latency of the sequential and the build-in methods.
+
 **Note:** This experiment was done on a virtual machine (4 cores assigned, 8 GB of RAM), and there was no other application running when the experiment was running.
 
 ### 3.2. Machine 2 (Physical Machine): 4 cores, 2 threads per core, 1346 CPU MHz
@@ -103,21 +105,35 @@ ggplot(df3, aes(Size, Time, colour=Type)) +
 
 ### 3.4. Comparison according to Parallel time
 Summary of CPU specification:
+
+`size_seq` denotes the size from which parallel method become faster than the sequential one.
+`size_libc` denotes the size from which parallel method become faster than the built-in method.
+
 ```{r table2, echo=FALSE, message=FALSE, warnings=FALSE}
 tabl <- "
-| Machine       | Cores  | Thread/core  | CPU MHz |
-|---------------|--------|--------------|---------|
-| 1 (Virtual)   | 4      | 1            | 2370    |
-| 2 (Physical)  | 4      | 2            | 1346    |
-| 3 (Physcial)  | 6      | 1            | 3000    |
+| Machine       | Cores  | Thread/core  | CPU MHz | size_seq | size_libc |
+|---------------|--------|--------------|---------|----------|-----------|
+| 1 (Virtual)   | 4      | 1            | 2370    | 8000000  | 11000000  |
+| 2 (Physical)  | 4      | 2            | 1346    | 600000   | 600000    |
+| 3 (Physcial)  | 6      | 1            | 3000    | 360000   | 460000    |
 "
 cat(tabl) # output the table in a format good for HTML/PDF/docx conversion
 ```
 
+Plot & Comparison: 
+```{r, message=FALSE}
+library(reshape2)
+df5 <- read.csv("data/comparison.csv",header=T)
+#df$fact = factor(df$fact, levels=c('virtual','physical1','physical2'))
+mdf <- melt(df5[,c('machine','size_seq','size_libc')], id.vars = 1)
 
-Plot: **TBD**
+ggplot(mdf, aes(x = machine, y=value)) + 
+  geom_bar(aes(fill=variable), stat="identity", position = "dodge", width=0.3) 
+  #scale_y_continuous(breaks=c(0, 8000000, 11000000, 600000, 360000, 460000))
+```
 
-Comparison: **TBD**
+**Comment:** 
+
 <!--
 ```{r, message=FALSE}
 #extracting only Parallel sorting columns
@@ -141,7 +157,6 @@ ggplot(df_all_par, aes(Size, Time, colour=Machine)) +
   theme( plot.title = element_text(hjust = 0.5), legend.position = "top" )
 ```
 -->
-
 
 
 
