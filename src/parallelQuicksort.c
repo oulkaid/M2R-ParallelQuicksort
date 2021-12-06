@@ -17,7 +17,6 @@
 #include <time.h>
 #include <sys/time.h>
 #include <string.h>
-#include "time.h"
 
 #define DNUM 1000000
 #define THREAD_LEVEL 10
@@ -269,11 +268,6 @@ void *parallelQuicksortHelper(void *threadarg)
   }
 
   pthread_attr_destroy(&attr);
-
-  //time_t before = time(0);
-  double before = clock();
-  printf("before: %lf\n", before);
-
   //Now, join the left and right sides to finish.
   for (t = 0; t < 2; t++) {
     rc = pthread_join(threads[t], &status);
@@ -283,15 +277,6 @@ void *parallelQuicksortHelper(void *threadarg)
     }
   }
 
-  //time_t after = time(0);
-  double after = clock();
-  printf("after: %lf\n", after);
-  double diff = after - before;
-
-  FILE *file;
-  file = fopen("test.txt", "w");
-  fprintf(file, "%lf", (double)diff);
-  fclose(file);
   pthread_exit(NULL);
 }
 
