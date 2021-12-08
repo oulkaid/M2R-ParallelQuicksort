@@ -1,4 +1,4 @@
 machine, size_seq, size_libc
-virtual, 8000000, 11000000
-physical1, 600000, 600000
-physical2, 360000, 460000
+virtual, 8000000, 12000000
+physical1, 550000, 550000
+physical2, 500000, 900000

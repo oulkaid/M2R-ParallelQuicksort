@@ -46,22 +46,26 @@ version
 ## 3. Experimentation and analysis
 Now, let's build the dataframes from csv files and plot the corresponding graphs with ggplot2.
 
-Each experiment is run on a different machine. The goal is to explore the effect of system capabilities on the overall performance (and maybe make conclusions upon the patterns found).
+Each experiment is run on a different machine. The goal is to explore the effect of system capabilities on the overall performance (and maybe make conclusions upon the patterns found). In the following plots, we represent obtained samples by small dots and we draw a line between the means of theses samples.
 
 ### 3.1. Machine 1 (Virtual Machine): 4 cores, 1 thread per core, 2370 CPU MHz
+Resulting data: `data/in_2021-12-08/measurements_19:36.csv`
 ```{r, message=FALSE}
 #parameters: START_SIZE=0, MAX_SIZE=15000000, STEP=1000000
-#confidence level : 95%
-df <- read.csv("data/in_2021-11-20/measurements_01:44.csv",header=T)
+df <- read.csv("data/in_2021-12-08/measurements_19:36.csv",header=T)
 df <- melt(df, id.vars="Size")
 names(df)[2] <- "Type"
 names(df)[3] <- "Time"
 
-ggplot(df, aes(Size, Time, colour=Type)) + 
-  geom_point(size = 0.2) +
-  stat_smooth(level = 0.95) +
-  theme( plot.title = element_text(hjust = 0.5), legend.position = "top" ) +
-  scale_x_continuous(breaks=c(0, 8000000, 11000000, 15000000))
+summary <- df %>% group_by(Type, Size) %>% summarise_at(vars(Time), list(meanTime = mean))
+
+ggplot(df, aes(colour=Type)) + 
+  geom_point(data = df, aes(x = Size, y = Time), size = .1) +
+  geom_point(data = summary, aes(x = Size, y = meanTime), size = 1) +
+  geom_line(data = summary, aes(x = Size, y = meanTime), size = .7) +
+  labs(title = "\"Time\" spent by Machine 1 to sort an array of a given \"Size\"") +
+  theme( plot.title = element_text(hjust = 0.5)) + theme_light() +
+  scale_x_continuous(breaks=c(0, 8000000, 12000000, 15000000))
 ```
 
 **Comment:** For arrays with a size of up to 11000000 elements, the built-in method is the most rapid. Afterwards, the Threaded computing performs better. 
@@ -72,35 +76,43 @@ One clear reason why the parallel method was slow with smaller array size refer 
 **Note:** This experiment was done on a virtual machine (4 cores assigned, 8 GB of RAM), and there was no other application running when the experiment was running.
 
 ### 3.2. Machine 2 (Physical Machine): 4 cores, 2 threads per core, 1346 CPU MHz
+Resulting data: `data/oulkaido_2021-12-08/measurements_20:08.csv`
 ```{r, message=FALSE}
 #parameters: START_SIZE=0, MAX_SIZE=1000000, STEP=100000
-#confidence level : 95%
-df2 <- read.csv("data/oulkaido_2021-11-24/measurements_21:26.csv",header=T)
+df2 <- read.csv("data/oulkaido_2021-12-08/measurements_20:08.csv",header=T)
 df2 <- melt(df2, id.vars="Size")
 names(df2)[2] <- "Type"
 names(df2)[3] <- "Time"
 
-ggplot(df2, aes(Size, Time, colour=Type)) + 
-  geom_point(size = 0.2) +
-  stat_smooth(level = 0.95) +
-  theme( plot.title = element_text(hjust = 0.5), legend.position = "top" ) +
-  scale_x_continuous(breaks=c(0, 600000, 1000000))
+summary2 <- df2 %>% group_by(Type, Size) %>% summarise_at(vars(Time), list(meanTime = mean))
+
+ggplot(df2, aes(colour=Type)) + 
+  geom_point(data = df2, aes(x = Size, y = Time), size = .1) +
+  geom_point(data = summary2, aes(x = Size, y = meanTime), size = 1) +
+  geom_line(data = summary2, aes(x = Size, y = meanTime), size = .7) +
+  labs(title = "\"Time\" spent by Machine 2 to sort an array of a given \"Size\"") +
+  theme( plot.title = element_text(hjust = 0.5)) + theme_light() +
+  scale_x_continuous(breaks=c(0, 550000, 1000000))
 ```
 
-### 3.3. Machine 1 (Physical Machine): 6 cores, 1 thread per core, 3000 CPU MHz
+### 3.3. Machine 3 (Physical Machine): 6 cores, 1 thread per core, 3000 CPU MHz
+Resulting data: `data/ensipc203_2021-12-08/measurements_21:39.csv`
 ```{r, message=FALSE}
-#parameters: START_SIZE=0, MAX_SIZE=600000, STEP=10000
-#confidence level : 95%
-df3 <- read.csv("data/ensipc103_2021-11-24/measurements_22:03.csv",header=T)
+#parameters: START_SIZE=0, MAX_SIZE=10000000, STEP=500000
+df3 <- read.csv("data/ensipc203_2021-12-08/measurements_21:39.csv",header=T)
 df3 <- melt(df3, id.vars="Size")
 names(df3)[2] <- "Type"
 names(df3)[3] <- "Time"
 
-ggplot(df3, aes(Size, Time, colour=Type)) + 
-  geom_point(size = 0.1) +
-  stat_smooth(level = 0.95) +
-  theme( plot.title = element_text(hjust = 0.5), legend.position = "top" ) +
-  scale_x_continuous(breaks=c(0, 360000, 460000, 600000))
+summary3 <- df3 %>% group_by(Type, Size) %>% summarise_at(vars(Time), list(meanTime = mean))
+
+ggplot(df3, aes(colour=Type)) + 
+  geom_point(data = df3, aes(x = Size, y = Time), size = .1) +
+  geom_point(data = summary3, aes(x = Size, y = meanTime), size = 1) +
+  geom_line(data = summary3, aes(x = Size, y = meanTime), size = .4) +
+  labs(title = "\"Time\" spent by Machine 3 to sort an array of a given \"Size\"") +
+  theme( plot.title = element_text(hjust = 0.5)) + theme_light() +
+  scale_x_continuous(breaks=c(0, 500000, 900000, 2000000))
 ```
 
 ### 3.4. Comparison according to Parallel time
@@ -113,54 +125,25 @@ Summary of CPU specification:
 tabl <- "
 | Machine       | Cores  | Thread/core  | CPU MHz | size_seq | size_libc |
 |---------------|--------|--------------|---------|----------|-----------|
-| 1 (Virtual)   | 4      | 1            | 2370    | 8000000  | 11000000  |
-| 2 (Physical)  | 4      | 2            | 1346    | 600000   | 600000    |
-| 3 (Physcial)  | 6      | 1            | 3000    | 360000   | 460000    |
+| 1 (Virtual)   | 4      | 1            | 2370    | 8000000  | 12000000  |
+| 2 (Physical)  | 4      | 2            | 1346    | 550000   | 550000    |
+| 3 (Physcial)  | 6      | 1            | 3000    | 500000   | 900000    |
 "
 cat(tabl) # output the table in a format good for HTML/PDF/docx conversion
 ```
+
 
 Plot & Comparison: 
 ```{r, message=FALSE}
 library(reshape2)
 df5 <- read.csv("data/comparison.csv",header=T)
-#df$fact = factor(df$fact, levels=c('virtual','physical1','physical2'))
 mdf <- melt(df5[,c('machine','size_seq','size_libc')], id.vars = 1)
 
 ggplot(mdf, aes(x = machine, y=value)) + 
-  geom_bar(aes(fill=variable), stat="identity", position = "dodge", width=0.3) 
-  #scale_y_continuous(breaks=c(0, 8000000, 11000000, 600000, 360000, 460000))
+  geom_bar(aes(fill=variable), stat="identity", position = "dodge", width=0.3) +
+  labs(title = "Size from which Parallel method is faster than {Seqential, Built-in}") +
+  theme( plot.title = element_text(hjust = 0.5)) + theme_light() 
 ```
-
-**Comment:** 
-
-<!--
-```{r, message=FALSE}
-#extracting only Parallel sorting columns
-df_bis  <- subset(df, Type=="Par")
-df_bis2 <- subset(df2, Type=="Par")
-df_bis3 <- subset(df3, Type=="Par")
-
-#appending IDs specifying the machine
-df_bis[,"Machine"]  = 1
-df_bis2[,"Machine"] = 2
-df_bis3[,"Machine"] = 3
-
-#group all data in one dataframe
-df_all_par <- rbind(df_bis, df_bis2, df_bis3)
-df_all_par <- transform(df_all_par, Machine = as.character(Machine))
-
-#plot
-ggplot(df_all_par, aes(Size, Time, colour=Machine)) + 
-  geom_point(size = 0.1) +
-  stat_smooth(size = 0.7) +
-  theme( plot.title = element_text(hjust = 0.5), legend.position = "top" )
-```
--->
-
-
-
-
 
 
 
