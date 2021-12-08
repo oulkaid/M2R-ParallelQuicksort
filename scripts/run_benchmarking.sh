@@ -3,23 +3,24 @@ OUTPUT_DIRECTORY=data/`hostname`_`date +%F`
 mkdir -p $OUTPUT_DIRECTORY
 OUTPUT_TXT=$OUTPUT_DIRECTORY/measurements_`date +%R`.txt
 OUTPUT_CSV=$OUTPUT_DIRECTORY/measurements_`date +%R`.csv
-c100=100
+_100=100
 
 START_SIZE=0
 MAX_SIZE=15000000
 STEP=1000000
+REPEAT=20
 
 touch $OUTPUT_TXT
-for rep in `seq 1 20`; do
+for rep in `seq 1 $REPEAT`; do
     for i in $(eval echo {$START_SIZE..$MAX_SIZE..$STEP} ); do
-    for rep in `seq 1 5`; do
         echo "Size: $i" >> $OUTPUT_TXT;
         ./src/parallelQuicksort $i >> $OUTPUT_TXT;
-    echo -ne "Progress: $((i * c100 / MAX_SIZE))%\r"
+	echo -ne "Running $rep/$REPEAT: $((i*_100/MAX_SIZE))%\r" #progress
     done;
+    echo -ne "                        \r"
 done;
-echo -ne "Progress: 100% --> generating csv file\n"
+echo "Generating csv file.."
 
 perl scripts/csv_quicksort_extractor2.pl < $OUTPUT_TXT > $OUTPUT_CSV
-echo "Output: $OUTPUT_CSV"
+echo "Output file: $OUTPUT_CSV"
 rm $OUTPUT_TXT
